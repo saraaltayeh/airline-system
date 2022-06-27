@@ -1,25 +1,28 @@
 'use strict';
-const events = require('../events');
-const {faker} = require('@faker-js/faker');
-require('../system/system');
+require('dotenv').config();
+const io = require('socket.io-client');
+const host = `http://localhost:${process.env.PORT}`;
+const {
+    faker
+} = require('@faker-js/faker');
+
 
 let flightID = faker.datatype.uuid();
 
-events.on('new-flight', handleTookOff);
-function handleTookOff() {
-setTimeout(() => {
-    let tookOff = `Pilot: flight with ID ${flightID} took-off`;
-    console.log(tookOff);
-    events.emit('took-off', tookOff);
-}, 3000);
-}
+const events_airline = io.connect(`${host}/airline`);
+const events = io.connect(host);
 
-events.on('new-flight', handleArrived);
-function handleArrived() {
-setTimeout(() => {
-    let arrived = `Pilot: flight with ID ${flightID} has arrived`;
-    console.log(arrived);
-    events.emit('Arrived', arrived);
-}, 7000);
-
-}
+events_airline.on('new-flight', () => {
+    setTimeout(() => {
+        let tookOff = `Pilot: flight with ID ${flightID} took-off`;
+        console.log(tookOff);
+        events_airline.emit('took-off', tookOff);
+    }, 4000);
+});
+events.on('new-flight', () => {
+    setTimeout(() => {
+        let arrived = `Pilot: flight with ID ${flightID} has arrived`;
+        console.log(arrived);
+        events.emit('Arrived', arrived);
+    }, 7000);
+});
