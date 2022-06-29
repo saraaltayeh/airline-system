@@ -3,8 +3,10 @@ require('dotenv').config();
 const PORT = process.env.PORT || 3050;
 const ioSystem = require('socket.io')(PORT);;
 const {faker} = require('@faker-js/faker');
+const uuid = require('uuid').v4;
 
-const tookOff = ioServer.of('/airline');
+const queue = {flights: {}};
+const tookOff = ioSystem.of('/airline');
 
 tookOff.on('connection', (socket) => {
     socket.on('new-flight', () => {
@@ -14,13 +16,19 @@ tookOff.on('connection', (socket) => {
 });
 
 ioSystem.on('connection', (socket) => {
-    socket.on('new-flight', () => {
+    socket.on('new-flight', (payload) => {
         detailsFlight1();
-        ioSystem.emit('new-flight');
+        const id = uuid();
+        queue.flights[id] = payload;
+        ioSystem.emit('new-flight', payload);
     });
     socket.on('Arrived', detailsFlight3);
     socket.on('Arrived', () => {
         ioSystem.emit('Arrived');
+    });
+    socket.on('get-all', () => {
+        socket.emit('flight', queue.flights);
+        queue.flights = {};
     });
 });
 
@@ -71,4 +79,4 @@ function detailsFlight3() {
         },
     };
     console.log(detailsFlight3);
-}
+} 
